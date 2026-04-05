@@ -119,7 +119,7 @@ python3 scripts/chart.py --json \
 
 **--json 模式下必填参数：** `--birth-date`、`--birth-time`、`--birth-location`，任一缺失返回非零退出码并输出 JSON 错误。
 
-**经纬度说明**：未提供 `--latitude/--longitude` 时，不输出 ascendant、midheaven、house_cusps。
+**经纬度说明**：未提供 `--latitude/--longitude` 时，不输出 ascendant、midheaven、house_cusps。即使 precision=exact，若无有效经纬度，ascendant、midheaven、house_cusps 也不输出。
 
 ---
 

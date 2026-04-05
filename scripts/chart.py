@@ -401,8 +401,8 @@ def main():
             },
         }
 
-        # ASC/MC/houses：仅当经纬度有效时输出
-        if has_geo and asc_mc is not None:
+        # ASC/MC/houses：仅当经纬度和精度均有效时输出
+        if has_geo and asc_mc is not None and args.precision in ("exact", "estimated"):
             asc_s = lon_to_sign(asc_mc["asc"])
             mc_s = lon_to_sign(asc_mc["mc"])
             output["chart"]["ascendant"] = {

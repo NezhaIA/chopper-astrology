@@ -69,7 +69,7 @@ Agent 自动完成：检查环境 → 计算星盘 → 生成解读。
 | low | 时间差 ±30 分钟 ~ ±2 小时 | 仅太阳星座 |
 | unavailable | 时间完全未知 | 仅太阳（置信度 low）|
 
-**注意**：上升点、天顶、宫位需要有效经纬度。未提供经纬度时，即使 precision=exact 也不输出 ASC/MC/houses。
+**注意**：上升点、天顶、宫位需要有效经纬度。未提供经纬度时，即使 precision=exact 也不输出 ASC/MC/houses。intake 流程中若用户未提供有效经纬度，计算层仅保证行星结果，不保证 ascendant/midheaven/house_cusps。
 
 ## 项目结构
 
