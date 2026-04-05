@@ -60,27 +60,27 @@ requires:
 | 水星星座 | ✅ | ✅ | ❌ | ❌ |
 | 金星星座 | ✅ | ✅ | ❌ | ❌ |
 | 火星星座 | ✅ | ✅ | ❌ | ❌ |
-| 婚神星座 | ✅ | ❌ | ❌ | ❌ |
-| 上升星座 | ❌ | ❌ | ❌ | ❌ |
+| 上升星座 | ✅ | ✅ | ❌ | ❌ |
+| 天顶 | ✅ | ✅ | ❌ | ❌ |
+| 宫位 | ✅ | ❌ | ❌ | ❌ |
 | 相位 | ✅ | ❌ | ❌ | ❌ |
-| 宫位 | ❌ | ❌ | ❌ | ❌ |
 | 格局 | ❌ | ❌ | ❌ | ❌ |
 
 ### data_source 定义
 
 | 值 | 含义 |
 |------|------|
-| `local_cli` | 计算器执行成功 |
+| `swe_local` | Swiss Ephemeris 计算器执行成功 |
 | `unavailable` | 计算器不可用或 precision=unknown |
 
 ### confidence 定义
 
-| 等级 | overall | sun | moon | mercury | venus | mars | juno | aspects |
-|------|---------|-----|------|---------|-------|------|------|--------|
-| high | high | high | high | medium | medium | medium | low | medium |
-| medium | medium | high | medium | medium | medium | medium | unavail | none |
-| low | low | low | unavail | unavail | unavail | unavail | unavail | none |
-| unavailable | unavail | low | unavail | unavail | unavail | unavail | unavail | none |
+| 等级 | overall | sun | moon | mercury | venus | mars | asc | mc | houses | aspects |
+|------|---------|-----|------|---------|-------|------|-----|----|--------|--------|
+| high | high | high | high | medium | medium | medium | high | high | high | medium |
+| medium | medium | high | medium | medium | medium | medium | medium | medium | unavail | none |
+| low | low | low | unavail | unavail | unavail | unavail | low | low | unavail | none |
+| unavailable | unavail | low | unavail | unavail | unavail | unavail | unavail | unavail | unavail | none |
 
 **unavailable 的 sun=low 说明**：太阳星座虽可计算，但因出生时间完全未知，置信度降为 low。解释层按 low 规则输出太阳结论，不得声称精确。
 
@@ -173,13 +173,15 @@ skill 首次被调用时，若用户未提供完整出生信息，**必须先进
 ```json
 {
   "meta": {
-    "data_source": "local_cli",
-    "calculator_version": "0.1.0",
+    "data_source": "swe_local",
+    "calculator_engine": "Swiss Ephemeris 2.10.03",
+    "calculator_version": "0.2.0",
     "generated_at": "ISO8601",
     "confidence": {
       "overall": "high", "sun": "high", "moon": "high",
       "mercury": "medium", "venus": "medium", "mars": "medium",
-      "juno": "low", "houses": "unavailable",
+      "ascendant": "high", "midheaven": "high",
+      "houses": "high",
       "aspects_fast": "medium", "aspects_slow": "medium"
     },
     "warnings": [],
@@ -188,19 +190,21 @@ skill 首次被调用时，若用户未提供完整出生信息，**必须先进
   "input": {
     "birth_date": "YYYY-MM-DD", "birth_time": "HH:MM",
     "birth_time_precision": "exact", "birth_location": "地址",
-    "latitude": null, "longitude": null, "timezone": "Asia/Shanghai"
+    "latitude": 32.0, "longitude": 116.0, "timezone": "Asia/Shanghai"
   },
   "chart": {
     "planets": {
-      "sun": { "sign": "\u2648", "sign_name": "白羊座", "degree": 16.6, "raw_lon": 16.6 },
-      "moon": { "sign": "\u2648", "sign_name": "白羊座", "degree": 25.8, "raw_lon": 25.8 },
-      "mercury": { "sign": "\u2652", "sign_name": "水瓶座", "degree": 9.1, "raw_lon": 309.1 },
-      "venus": { "sign": "\u2653", "sign_name": "双鱼座", "degree": 2.4, "raw_lon": 332.4 },
-      "mars": { "sign": "\u2651", "sign_name": "摩羯座", "degree": 14.9, "raw_lon": 284.9 },
-      "juno": { "sign": "\u2652", "sign_name": "水瓶座", "degree": 29.0, "raw_lon": 299.0 }
+      "sun": { "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 23.11, "ecliptic_lon": 143.1129, "ecliptic_lat": 0.0, "house": 10 },
+      "moon": { "sign": "\u2650", "sign_name": "射手座", "sign_index": 8, "degree": 2.32, "ecliptic_lon": 242.3159, "ecliptic_lat": 1.157, "house": 1 },
+      "mercury": { "sign": "\u264d", "sign_name": "处女座", "sign_index": 5, "degree": 15.68, "ecliptic_lon": 165.6754, "ecliptic_lat": 0.1321, "house": 11 },
+      "venus": { "sign": "\u264e", "sign_name": "天秤座", "sign_index": 6, "degree": 8.97, "ecliptic_lon": 188.9685, "ecliptic_lat": -1.1509, "house": 11 },
+      "mars": { "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 21.43, "ecliptic_lon": 141.4286, "ecliptic_lat": 1.1489, "house": 10 }
     },
+    "ascendant": { "lon": 216.5561, "sign": "\u264f", "sign_name": "天蝌座", "sign_index": 7, "degree": 6.56, "house": 1 },
+    "midheaven": { "lon": 130.5414, "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 10.54 },
+    "house_cusps": [216.5561, 245.5395, 277.1655, 310.5414, 343.0591, 11.9774, 36.5561, 65.5395, 97.1655, 130.5414, 163.0591, 191.9774],
     "aspects": [
-      { "p1": "sun", "p2": "mars", "angle": 1.7, "type": "conjunction", "orb": 1.7, "confidence": "medium" }
+      { "p1": "sun", "p2": "mars", "lon1": 143.1129, "lon2": 141.4286, "angle": 1.68, "type": "conjunction", "orb": 1.68, "confidence": "high" }
     ],
     "patterns": { "identified": [], "notes": "非完整格局分析" }
   }
@@ -212,35 +216,39 @@ skill 首次被调用时，若用户未提供完整出生信息，**必须先进
 ```json
 {
   "meta": {
-    "data_source": "local_cli",
-    "calculator_version": "0.1.0",
+    "data_source": "swe_local",
+    "calculator_engine": "Swiss Ephemeris 2.10.03",
+    "calculator_version": "0.2.0",
     "generated_at": "ISO8601",
     "confidence": {
       "overall": "medium", "sun": "high", "moon": "medium",
       "mercury": "medium", "venus": "medium", "mars": "medium",
-      "juno": "unavailable", "houses": "unavailable",
+      "ascendant": "medium", "midheaven": "medium",
+      "houses": "unavailable",
       "aspects_fast": "unavailable", "aspects_slow": "unavailable"
     },
     "warnings": [
       { "code": "BIRTH_TIME_ESTIMATED", "field": "birth_time",
         "message": "出生时间为估算值，相位不可用",
-        "affected": ["moon", "aspects"] }
+        "affected": ["ascendant", "midheaven", "aspects"] }
     ],
     "birth_time_precision": "estimated"
   },
   "input": {
     "birth_date": "YYYY-MM-DD", "birth_time": "HH:MM",
     "birth_time_precision": "estimated", "birth_location": "地址",
-    "latitude": null, "longitude": null, "timezone": "Asia/Shanghai"
+    "latitude": 32.0, "longitude": 116.0, "timezone": "Asia/Shanghai"
   },
   "chart": {
     "planets": {
-      "sun": { "sign": "\u2648", "sign_name": "白羊座", "degree": 16.6, "raw_lon": 16.6 },
-      "moon": { "sign": "\u2648", "sign_name": "白羊座", "degree": 25.8, "raw_lon": 25.8 },
-      "mercury": { "sign": "\u2652", "sign_name": "水瓶座", "degree": 9.1, "raw_lon": 309.1 },
-      "venus": { "sign": "\u2653", "sign_name": "双鱼座", "degree": 2.4, "raw_lon": 332.4 },
-      "mars": { "sign": "\u2651", "sign_name": "摩羯座", "degree": 14.9, "raw_lon": 284.9 }
+      "sun": { "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 23.11, "ecliptic_lon": 143.1129, "ecliptic_lat": 0.0 },
+      "moon": { "sign": "\u2650", "sign_name": "射手座", "sign_index": 8, "degree": 2.32, "ecliptic_lon": 242.3159, "ecliptic_lat": 1.157 },
+      "mercury": { "sign": "\u264d", "sign_name": "处女座", "sign_index": 5, "degree": 15.68, "ecliptic_lon": 165.6754, "ecliptic_lat": 0.1321 },
+      "venus": { "sign": "\u264e", "sign_name": "天秤座", "sign_index": 6, "degree": 8.97, "ecliptic_lon": 188.9685, "ecliptic_lat": -1.1509 },
+      "mars": { "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 21.43, "ecliptic_lon": 141.4286, "ecliptic_lat": 1.1489 }
     },
+    "ascendant": { "lon": 216.5561, "sign": "\u264f", "sign_name": "天蝌座", "sign_index": 7, "degree": 6.56, "house": 1 },
+    "midheaven": { "lon": 130.5414, "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 10.54 },
     "aspects": [],
     "patterns": { "identified": [], "notes": "非完整格局分析" }
   }
@@ -252,30 +260,32 @@ skill 首次被调用时，若用户未提供完整出生信息，**必须先进
 ```json
 {
   "meta": {
-    "data_source": "local_cli",
-    "calculator_version": "0.1.0",
+    "data_source": "swe_local",
+    "calculator_engine": "Swiss Ephemeris 2.10.03",
+    "calculator_version": "0.2.0",
     "generated_at": "ISO8601",
     "confidence": {
       "overall": "low", "sun": "low", "moon": "unavailable",
       "mercury": "unavailable", "venus": "unavailable", "mars": "unavailable",
-      "juno": "unavailable", "houses": "unavailable",
+      "ascendant": "low", "midheaven": "low",
+      "houses": "unavailable",
       "aspects_fast": "unavailable", "aspects_slow": "unavailable"
     },
     "warnings": [
       { "code": "BIRTH_TIME_APPROXIMATE", "field": "birth_time",
         "message": "出生时间仅有模糊区间，仅太阳星座可用",
-        "affected": ["moon", "mercury", "venus", "mars", "juno", "aspects"] }
+        "affected": ["moon", "mercury", "venus", "mars", "ascendant", "midheaven", "houses", "aspects"] }
     ],
     "birth_time_precision": "approximate"
   },
   "input": {
     "birth_date": "YYYY-MM-DD", "birth_time": "HH:MM",
     "birth_time_precision": "approximate", "birth_location": "地址",
-    "latitude": null, "longitude": null, "timezone": "Asia/Shanghai"
+    "latitude": 32.0, "longitude": 116.0, "timezone": "Asia/Shanghai"
   },
   "chart": {
     "planets": {
-      "sun": { "sign": "\u2648", "sign_name": "白羊座", "degree": 16.6, "raw_lon": 16.6 }
+      "sun": { "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 23.11, "ecliptic_lon": 143.1129, "ecliptic_lat": 0.0 }
     },
     "aspects": [],
     "patterns": { "identified": [], "notes": "非完整格局分析" }
@@ -289,18 +299,20 @@ skill 首次被调用时，若用户未提供完整出生信息，**必须先进
 {
   "meta": {
     "data_source": "unavailable",
-    "calculator_version": "0.1.0",
+    "calculator_engine": "Swiss Ephemeris 2.10.03",
+    "calculator_version": "0.2.0",
     "generated_at": "ISO8601",
     "confidence": {
       "overall": "unavailable", "sun": "low", "moon": "unavailable",
       "mercury": "unavailable", "venus": "unavailable", "mars": "unavailable",
-      "juno": "unavailable", "houses": "unavailable",
+      "ascendant": "unavailable", "midheaven": "unavailable",
+      "houses": "unavailable",
       "aspects_fast": "unavailable", "aspects_slow": "unavailable"
     },
     "warnings": [
       { "code": "BIRTH_TIME_UNKNOWN", "field": "birth_time",
         "message": "出生时间完全未知，或计算器不可用。太阳星座置信度降为 low，不得声称精确。",
-        "affected": ["moon", "mercury", "venus", "mars", "juno", "aspects"] }
+        "affected": ["moon", "mercury", "venus", "mars", "ascendant", "midheaven", "houses", "aspects"] }
     ],
     "birth_time_precision": "unknown"
   },
@@ -311,7 +323,7 @@ skill 首次被调用时，若用户未提供完整出生信息，**必须先进
   },
   "chart": {
     "planets": {
-      "sun": { "sign": "\u2648", "sign_name": "白羊座", "degree": 16.6, "raw_lon": 16.6 }
+      "sun": { "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 23.11, "ecliptic_lon": 143.1129, "ecliptic_lat": 0.0 }
     },
     "aspects": [],
     "patterns": { "identified": [], "notes": "非完整格局分析" }

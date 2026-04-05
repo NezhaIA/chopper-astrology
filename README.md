@@ -10,18 +10,12 @@
 
 **核心差异**：不是娱乐星座速查，而是自我认知工具。疗愈导向，拒绝宿命论。
 
-## 支持的行星
+## 真值源
 
-| 符号 | 行星 | 解读维度 |
-|------|------|----------|
-| ☀️ | 太阳 | 核心自我、人生使命 |
-| 🌙 | 月亮 | 情感模式、潜意识需求 |
-| ♀️ | 金星 | 情感模式、审美引力 |
-| ♂️ | 火星 | 行动力、冲突模式 |
-| ☿ | 水星 | 思维与沟通方式 |
-| ⚹ | 婚神 | 长期关系模式、承诺需求 |
-
-**注意**：本轮不包含上升星座和宫位系统。
+**Swiss Ephemeris**（`pyswisseph`）— 行业标准天文星历表，精度达 0.001 角秒。
+- 行星位置：DE431/DE436 星历
+- 上升点/天顶：Placidus 宫位系统
+- 不依赖网络，不调用外部 API
 
 ## 安装
 
@@ -32,24 +26,26 @@
 或手动安装：
 
 ```bash
-git clone https://github.com/daisy-ai/chopper-astrology.git
+git clone https://github.com/NezhaIA/chopper-astrology.git
 cd chopper-astrology
-pip install ephem pytz
+pip install -r scripts/requirements.txt
 ```
 
 ## 依赖
 
 - Python 3.9+
-- `ephem` — 星体位置计算
-- `pytz` — 时区处理
-
-Skill **不调用任何 LLM API**，解读生成由 Agent 内置模型完成。
+- `pyswisseph` ≥ 2.10 — Swiss Ephemeris Python 绑定
+- `pytz` ≥ 2024 — 时区处理
 
 ## 首次使用检查
 
+```bash
+python3 scripts/check_dependencies.py
+```
+
 | stdout 第一行 | 含义 |
 |------|------|
-| `OK:local_cli` | 全部功能可用 |
+| `OK:swe_local (swisseph X.XX.XX)` | 全部功能可用 |
 | `DEGRADED:missing_dependencies` | 仅 unavailable 模式 |
 | `UNAVAILABLE:calculator_not_found` | 仅 unavailable 模式 |
 
@@ -68,10 +64,27 @@ Agent 自动完成：检查环境 → 计算星盘 → 生成解读。
 
 | 等级 | 条件 | 可用数据 |
 |------|------|----------|
-| high | 时间精确到分钟 | 太阳、月亮、水星、金星、火星、婚神、相位 |
-| medium | 时间差 ±30 分钟内 | 太阳、月亮、水星、金星、火星、无相位 |
-| low | 时间差 ±30 分钟 ~ ±2 小时 | 仅太阳星座 |
-| unavailable | 时间完全未知 | 仅太阳星座（置信度 low）|
+| high | 时间精确到分钟 | 太阳、月亮、水星、金星、火星、上升点、天顶、宫位、相位 |
+| medium | 时间差 ±30 分钟内 | 太阳、月亮、水星、金星、火星、上升点、天顶、无相位 |
+| low | 时间差 ±30 分钟 ~ ±2 小时 | 仅太阳、上升点、天顶 |
+| unavailable | 时间完全未知 | 仅太阳（置信度 low）|
+
+## 字段说明
+
+所有行星返回以下结构：
+```json
+{
+  "sign": "♌",
+  "sign_name": "狮子座",
+  "sign_index": 4,
+  "degree": 23.11,
+  "ecliptic_lon": 143.1129,
+  "ecliptic_lat": 0.0,
+  "house": 10
+}
+```
+
+ASC/MC 结构相同（无 house 字段）。
 
 ## 项目结构
 
@@ -81,26 +94,28 @@ chopper-astrology/
 ├── README.md
 ├── LICENSE
 └── scripts/
-    ├── chart.py
+    ├── chart.py              # Swiss Ephemeris 计算器
     ├── check_dependencies.py
     └── requirements.txt
 ```
 
 ## 当前实现
 
-- **星体位置**：`ephem` 库，RA/Dec 转热带黄道经度
-- **婚神星**：VSOP87 近似轨道（仅 high 时输出）
-- **相位**：合相/六分相/四分相/三分相/对分相（仅 high 时输出）
+| 内容 | 方法 |
+|------|------|
+| 行星黄经 | Swiss Ephemeris DE431/DE436 |
+| 上升点/天顶 | Swiss Ephemeris Placidus 宫位 |
+| 宫位制 | Placidus |
+| 主要相位 | 合/六分/四分/三分/对分（容许度 6-8°）|
 
 ## 当前未实现
 
 | 内容 | 处理 |
 |------|------|
-| 上升星座 | unavailable |
-| 宫位系统 | unavailable |
-| 地理编码 | latitude/longitude=null |
+| 地理编码 | latitude/longitude=null 或手动传入 |
 | 格局分析 | patterns.identified=[] |
-| 远程 API | 本轮未实现 |
+| 南北交点 | 后续版本 |
+| 先天盘/后天盘 | 后续版本 |
 
 ## License
 

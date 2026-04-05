@@ -3,7 +3,7 @@
 Chopper Astrology — 首次使用依赖检查脚本
 
 stdout 第一行必须是以下三种状态之一：
-  OK:local_cli
+  OK:swe_local
   DEGRADED:missing_dependencies
   UNAVAILABLE:calculator_not_found
 
@@ -18,13 +18,25 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CHART_PATH = os.path.join(SCRIPT_DIR, "chart.py")
 
 
+def check_swe():
+    """检查 Swiss Ephemeris Python 绑定是否可用。"""
+    for module_name in ["swisseph", "pyswisseph"]:
+        try:
+            mod = __import__(module_name)
+            version = getattr(mod, "version", "unknown")
+            return True, module_name, version
+        except ImportError:
+            continue
+    return False, None, None
+
+
 def check_python_version():
     return sys.version_info >= (3, 9)
 
 
 def check_dependencies():
     missing = []
-    for pkg in ["ephem", "pytz"]:
+    for pkg in ["pytz"]:
         try:
             __import__(pkg)
         except ImportError:
@@ -41,6 +53,11 @@ def main():
         print("DEGRADED:missing_dependencies")
         sys.exit(1)
 
+    swe_ok, module_name, version = check_swe()
+    if not swe_ok:
+        print("DEGRADED:missing_dependencies")
+        sys.exit(1)
+
     missing = check_dependencies()
     if missing:
         print("DEGRADED:missing_dependencies")
@@ -49,7 +66,7 @@ def main():
     try:
         result = subprocess.run(
             [sys.executable, CHART_PATH, "--version"],
-            capture_output=True, timeout=5, cwd=SCRIPT_DIR
+            capture_output=True, timeout=10, cwd=SCRIPT_DIR
         )
         if result.returncode != 0:
             print("DEGRADED:missing_dependencies")
@@ -58,7 +75,7 @@ def main():
         print("DEGRADED:missing_dependencies")
         sys.exit(1)
 
-    print("OK:local_cli")
+    print(f"OK:swe_local ({module_name} {version})")
     sys.exit(0)
 
 
