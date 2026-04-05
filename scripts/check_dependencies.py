@@ -19,29 +19,13 @@ CHART_PATH = os.path.join(SCRIPT_DIR, "chart.py")
 
 
 def check_swe():
-    """检查 Swiss Ephemeris Python 绑定是否可用。"""
     for module_name in ["swisseph", "pyswisseph"]:
         try:
-            mod = __import__(module_name)
-            version = getattr(mod, "version", "unknown")
-            return True, module_name, version
+            __import__(module_name)
+            return True
         except ImportError:
             continue
-    return False, None, None
-
-
-def check_python_version():
-    return sys.version_info >= (3, 9)
-
-
-def check_dependencies():
-    missing = []
-    for pkg in ["pytz"]:
-        try:
-            __import__(pkg)
-        except ImportError:
-            missing.append(pkg)
-    return missing
+    return False
 
 
 def main():
@@ -49,17 +33,17 @@ def main():
         print("UNAVAILABLE:calculator_not_found")
         sys.exit(2)
 
-    if not check_python_version():
+    if sys.version_info < (3, 9):
         print("DEGRADED:missing_dependencies")
         sys.exit(1)
 
-    swe_ok, module_name, version = check_swe()
-    if not swe_ok:
+    try:
+        __import__("pytz")
+    except ImportError:
         print("DEGRADED:missing_dependencies")
         sys.exit(1)
 
-    missing = check_dependencies()
-    if missing:
+    if not check_swe():
         print("DEGRADED:missing_dependencies")
         sys.exit(1)
 
@@ -75,7 +59,7 @@ def main():
         print("DEGRADED:missing_dependencies")
         sys.exit(1)
 
-    print(f"OK:swe_local ({module_name} {version})")
+    print("OK:swe_local")
     sys.exit(0)
 
 

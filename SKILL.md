@@ -22,7 +22,7 @@ triggers:
 requires:
   python: "3.9"
   packages:
-    - ephem
+    - pyswisseph
     - pytz
 ---
 
@@ -46,8 +46,8 @@ requires:
 
 | 等级 | 触发条件 |
 |------|----------|
-| high | 出生时间精确到分钟 |
-| medium | 出生时间差 ±30 分钟内 |
+| high | 出生时间精确到分钟 + 有效经纬度 |
+| medium | 出生时间差 ±30 分钟内 + 有效经纬度 |
 | low | 出生时间差 ±30 分钟 ~ ±2 小时 |
 | unavailable | 出生时间完全未知；或计算器不可用 |
 
@@ -60,9 +60,9 @@ requires:
 | 水星星座 | ✅ | ✅ | ❌ | ❌ |
 | 金星星座 | ✅ | ✅ | ❌ | ❌ |
 | 火星星座 | ✅ | ✅ | ❌ | ❌ |
-| 上升星座 | ✅ | ✅ | ❌ | ❌ |
-| 天顶 | ✅ | ✅ | ❌ | ❌ |
-| 宫位 | ✅ | ❌ | ❌ | ❌ |
+| 上升星座 | ✅（需经纬度）| ✅（需经纬度）| ❌ | ❌ |
+| 天顶 | ✅（需经纬度）| ✅（需经纬度）| ❌ | ❌ |
+| 宫位 | ✅（需经纬度）| ❌ | ❌ | ❌ |
 | 相位 | ✅ | ❌ | ❌ | ❌ |
 | 格局 | ❌ | ❌ | ❌ | ❌ |
 
@@ -79,10 +79,8 @@ requires:
 |------|---------|-----|------|---------|-------|------|-----|----|--------|--------|
 | high | high | high | high | medium | medium | medium | high | high | high | medium |
 | medium | medium | high | medium | medium | medium | medium | medium | medium | unavail | none |
-| low | low | low | unavail | unavail | unavail | unavail | low | low | unavail | none |
+| low | low | low | unavail | unavail | unavail | unavail | unavail | unavail | unavail | none |
 | unavailable | unavail | low | unavail | unavail | unavail | unavail | unavail | unavail | unavail | none |
-
-**unavailable 的 sun=low 说明**：太阳星座虽可计算，但因出生时间完全未知，置信度降为 low。解释层按 low 规则输出太阳结论，不得声称精确。
 
 ---
 
@@ -102,7 +100,7 @@ python3 scripts/check_dependencies.py
 ```
 
 stdout 第一行必须是以下三种状态之一：
-- `OK:local_cli`
+- `OK:swe_local`
 - `DEGRADED:missing_dependencies`
 - `UNAVAILABLE:calculator_not_found`
 
@@ -113,11 +111,15 @@ python3 scripts/chart.py --json \
   --birth-date=YYYY-MM-DD \
   --birth-time=HH:MM \
   --birth-location="地址" \
+  --latitude=XX.XXXX \
+  --longitude=XX.XXXX \
   --birth-time-precision=exact|estimated|approximate|unknown \
   --timezone=Asia/Shanghai
 ```
 
 **--json 模式下必填参数：** `--birth-date`、`--birth-time`、`--birth-location`，任一缺失返回非零退出码并输出 JSON 错误。
+
+**经纬度说明**：未提供 `--latitude/--longitude` 时，不输出 ascendant、midheaven、house_cusps。
 
 ---
 
@@ -168,7 +170,7 @@ skill 首次被调用时，若用户未提供完整出生信息，**必须先进
 
 ## 五、统一 JSON 契约
 
-### high（precision=exact）
+### high（precision=exact + 有效经纬度）
 
 ```json
 {
@@ -194,14 +196,14 @@ skill 首次被调用时，若用户未提供完整出生信息，**必须先进
   },
   "chart": {
     "planets": {
-      "sun": { "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 23.11, "ecliptic_lon": 143.1129, "ecliptic_lat": 0.0, "house": 10 },
-      "moon": { "sign": "\u2650", "sign_name": "射手座", "sign_index": 8, "degree": 2.32, "ecliptic_lon": 242.3159, "ecliptic_lat": 1.157, "house": 1 },
-      "mercury": { "sign": "\u264d", "sign_name": "处女座", "sign_index": 5, "degree": 15.68, "ecliptic_lon": 165.6754, "ecliptic_lat": 0.1321, "house": 11 },
-      "venus": { "sign": "\u264e", "sign_name": "天秤座", "sign_index": 6, "degree": 8.97, "ecliptic_lon": 188.9685, "ecliptic_lat": -1.1509, "house": 11 },
-      "mars": { "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 21.43, "ecliptic_lon": 141.4286, "ecliptic_lat": 1.1489, "house": 10 }
+      "sun":    { "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 23.11, "ecliptic_lon": 143.1129, "ecliptic_lat": 0.0, "house": 10 },
+      "moon":   { "sign": "\u2650", "sign_name": "射手座", "sign_index": 8, "degree": 2.32,  "ecliptic_lon": 242.3159, "ecliptic_lat": 1.157,  "house": 1  },
+      "mercury":{ "sign": "\u264d", "sign_name": "处女座", "sign_index": 5, "degree": 15.68, "ecliptic_lon": 165.6754, "ecliptic_lat": 0.132, "house": 11 },
+      "venus":  { "sign": "\u264e", "sign_name": "天秤座", "sign_index": 6, "degree": 8.97,  "ecliptic_lon": 188.9685, "ecliptic_lat": -1.151, "house": 11 },
+      "mars":   { "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 21.43, "ecliptic_lon": 141.4286, "ecliptic_lat": 1.149,  "house": 10 }
     },
-    "ascendant": { "lon": 216.5561, "sign": "\u264f", "sign_name": "天蝌座", "sign_index": 7, "degree": 6.56, "house": 1 },
-    "midheaven": { "lon": 130.5414, "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 10.54 },
+    "ascendant": { "lon": 216.5561, "sign": "\u264f", "sign_name": "天蝌座", "sign_index": 7, "degree": 6.56,  "house": 1 },
+    "midheaven":{ "lon": 130.5414, "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 10.54 },
     "house_cusps": [216.5561, 245.5395, 277.1655, 310.5414, 343.0591, 11.9774, 36.5561, 65.5395, 97.1655, 130.5414, 163.0591, 191.9774],
     "aspects": [
       { "p1": "sun", "p2": "mars", "lon1": 143.1129, "lon2": 141.4286, "angle": 1.68, "type": "conjunction", "orb": 1.68, "confidence": "high" }
@@ -211,7 +213,7 @@ skill 首次被调用时，若用户未提供完整出生信息，**必须先进
 }
 ```
 
-### medium（precision=estimated）
+### medium（precision=estimated + 有效经纬度，无相位）
 
 ```json
 {
@@ -241,21 +243,21 @@ skill 首次被调用时，若用户未提供完整出生信息，**必须先进
   },
   "chart": {
     "planets": {
-      "sun": { "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 23.11, "ecliptic_lon": 143.1129, "ecliptic_lat": 0.0 },
-      "moon": { "sign": "\u2650", "sign_name": "射手座", "sign_index": 8, "degree": 2.32, "ecliptic_lon": 242.3159, "ecliptic_lat": 1.157 },
-      "mercury": { "sign": "\u264d", "sign_name": "处女座", "sign_index": 5, "degree": 15.68, "ecliptic_lon": 165.6754, "ecliptic_lat": 0.1321 },
-      "venus": { "sign": "\u264e", "sign_name": "天秤座", "sign_index": 6, "degree": 8.97, "ecliptic_lon": 188.9685, "ecliptic_lat": -1.1509 },
-      "mars": { "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 21.43, "ecliptic_lon": 141.4286, "ecliptic_lat": 1.1489 }
+      "sun":    { "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 23.11, "ecliptic_lon": 143.1129, "ecliptic_lat": 0.0 },
+      "moon":   { "sign": "\u2650", "sign_name": "射手座", "sign_index": 8, "degree": 2.32,  "ecliptic_lon": 242.3159, "ecliptic_lat": 1.157 },
+      "mercury":{ "sign": "\u264d", "sign_name": "处女座", "sign_index": 5, "degree": 15.68, "ecliptic_lon": 165.6754, "ecliptic_lat": 0.132 },
+      "venus":  { "sign": "\u264e", "sign_name": "天秤座", "sign_index": 6, "degree": 8.97,  "ecliptic_lon": 188.9685, "ecliptic_lat": -1.151 },
+      "mars":   { "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 21.43, "ecliptic_lon": 141.4286, "ecliptic_lat": 1.149 }
     },
     "ascendant": { "lon": 216.5561, "sign": "\u264f", "sign_name": "天蝌座", "sign_index": 7, "degree": 6.56, "house": 1 },
-    "midheaven": { "lon": 130.5414, "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 10.54 },
+    "midheaven":{ "lon": 130.5414, "sign": "\u264c", "sign_name": "狮子座", "sign_index": 4, "degree": 10.54 },
     "aspects": [],
     "patterns": { "identified": [], "notes": "非完整格局分析" }
   }
 }
 ```
 
-### low（precision=approximate）
+### low（precision=approximate，仅太阳）
 
 ```json
 {
@@ -267,7 +269,7 @@ skill 首次被调用时，若用户未提供完整出生信息，**必须先进
     "confidence": {
       "overall": "low", "sun": "low", "moon": "unavailable",
       "mercury": "unavailable", "venus": "unavailable", "mars": "unavailable",
-      "ascendant": "low", "midheaven": "low",
+      "ascendant": "unavailable", "midheaven": "unavailable",
       "houses": "unavailable",
       "aspects_fast": "unavailable", "aspects_slow": "unavailable"
     },
@@ -281,7 +283,7 @@ skill 首次被调用时，若用户未提供完整出生信息，**必须先进
   "input": {
     "birth_date": "YYYY-MM-DD", "birth_time": "HH:MM",
     "birth_time_precision": "approximate", "birth_location": "地址",
-    "latitude": 32.0, "longitude": 116.0, "timezone": "Asia/Shanghai"
+    "latitude": null, "longitude": null, "timezone": "Asia/Shanghai"
   },
   "chart": {
     "planets": {
@@ -344,7 +346,7 @@ skill 首次被调用时，若用户未提供完整出生信息，**必须先进
 出生时间：HH:MM（精度：[exact / estimated / approximate / unknown]）
 出生地点：XX省XX市XX区/县
 置信度等级：[high / medium / low / unavailable]
-数据来源：[local_cli / unavailable]
+数据来源：[swe_local / unavailable]
 ```
 
 ### 6.2 置信度说明
@@ -433,7 +435,7 @@ python3 scripts/check_dependencies.py
 
 | stdout 第一行 | 含义 |
 |------|------|
-| `OK:local_cli` | 主路径激活 |
+| `OK:swe_local` | 主路径激活 |
 | `DEGRADED:missing_dependencies` | 进入 unavailable |
 | `UNAVAILABLE:calculator_not_found` | 进入 unavailable |
 
@@ -444,6 +446,16 @@ python3 scripts/check_dependencies.py
 **适用：** 有出生信息的本命盘分析；无精确盘面时的咨询式对话分析
 
 **不适用：** 娱乐星座配对；精确每日/每周运势；天文精度盘面计算
+
+---
+
+## 十三、对照测试
+
+```bash
+python3 scripts/chart.py --reference-test
+```
+
+输出固定测试用例（2002-08-16 11:30 北京时间，霍邱）的结构化基准数据，用于与成熟排盘软件（Astro.com、Solar Fire 等）逐项核对。此模式与正常运行路径完全隔离，不受精度参数影响。
 
 ---
 

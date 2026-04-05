@@ -45,7 +45,7 @@ python3 scripts/check_dependencies.py
 
 | stdout 第一行 | 含义 |
 |------|------|
-| `OK:swe_local (swisseph X.XX.XX)` | 全部功能可用 |
+| `OK:swe_local` | 全部功能可用 |
 | `DEGRADED:missing_dependencies` | 仅 unavailable 模式 |
 | `UNAVAILABLE:calculator_not_found` | 仅 unavailable 模式 |
 
@@ -64,27 +64,12 @@ Agent 自动完成：检查环境 → 计算星盘 → 生成解读。
 
 | 等级 | 条件 | 可用数据 |
 |------|------|----------|
-| high | 时间精确到分钟 | 太阳、月亮、水星、金星、火星、上升点、天顶、宫位、相位 |
-| medium | 时间差 ±30 分钟内 | 太阳、月亮、水星、金星、火星、上升点、天顶、无相位 |
-| low | 时间差 ±30 分钟 ~ ±2 小时 | 仅太阳、上升点、天顶 |
+| high | 时间精确到分钟 + 有效经纬度 | 太阳、月亮、水星、金星、火星、上升点、天顶、宫位、相位 |
+| medium | 时间差 ±30 分钟内 + 有效经纬度 | 太阳、月亮、水星、金星、火星、上升点、天顶、无相位 |
+| low | 时间差 ±30 分钟 ~ ±2 小时 | 仅太阳星座 |
 | unavailable | 时间完全未知 | 仅太阳（置信度 low）|
 
-## 字段说明
-
-所有行星返回以下结构：
-```json
-{
-  "sign": "♌",
-  "sign_name": "狮子座",
-  "sign_index": 4,
-  "degree": 23.11,
-  "ecliptic_lon": 143.1129,
-  "ecliptic_lat": 0.0,
-  "house": 10
-}
-```
-
-ASC/MC 结构相同（无 house 字段）。
+**注意**：上升点、天顶、宫位需要有效经纬度。未提供经纬度时，即使 precision=exact 也不输出 ASC/MC/houses。
 
 ## 项目结构
 
@@ -98,6 +83,14 @@ chopper-astrology/
     ├── check_dependencies.py
     └── requirements.txt
 ```
+
+## 对照测试
+
+```bash
+python3 scripts/chart.py --reference-test
+```
+
+此命令输出固定测试用例的基准数据，用于与 Astro.com、Solar Fire 等成熟排盘软件逐项核对。
 
 ## 当前实现
 
