@@ -59,8 +59,7 @@ SWE_PLANETS = {
     "mars": swe.MARS,
 }
 
-# 婚神星：Swiss Ephemeris 中的小行星编号 3
-SWE_JUNO = 3
+
 
 # 主要相位容许度
 ASPECT_ORBS = [
@@ -176,7 +175,6 @@ def build_confidence(precision):
         "overall": "unavailable",
         "sun": "unavailable", "moon": "unavailable",
         "mercury": "unavailable", "venus": "unavailable", "mars": "unavailable",
-        "juno": "unavailable",
         "ascendant": "unavailable", "midheaven": "unavailable",
         "houses": "unavailable",
         "aspects_fast": "unavailable", "aspects_slow": "unavailable",
@@ -185,7 +183,6 @@ def build_confidence(precision):
         base.update({
             "overall": "high", "sun": "high", "moon": "high",
             "mercury": "medium", "venus": "medium", "mars": "medium",
-            "juno": "low",
             "ascendant": "high", "midheaven": "high",
             "houses": "high",
             "aspects_fast": "medium", "aspects_slow": "medium",
@@ -259,17 +256,6 @@ def calculate_chart(birth_date, birth_time, precision, lat, lon, tz_name):
                 raw["lon"], asc_mc["asc"], asc_mc["house_cusps"]
             )
 
-    # 婚神星：仅 exact 精度 + 有经纬度时输出
-    if precision == "exact" and has_geo:
-        juno_raw = calc_planet(jd_tt, SWE_JUNO)
-        sym, name_str, deg, idx = lon_to_sign(juno_raw["lon"])
-        planet_lons["juno"] = juno_raw["lon"]
-        planets["juno"] = {
-            "sign": sym, "sign_name": name_str, "sign_index": idx,
-            "degree": deg, "ecliptic_lon": juno_raw["lon"], "ecliptic_lat": juno_raw["lat"],
-            "house": planet_in_house(juno_raw["lon"], asc_mc["asc"], asc_mc["house_cusps"]),
-        }
-
     aspects = build_aspects(planet_lons, precision)
     return planets, asc_mc, aspects
 
@@ -308,13 +294,10 @@ def main():
         jd_tt = get_jd_tt(birth_dt, tz_name)
 
         planet_raw = {name: calc_planet(jd_tt, pid) for name, pid in SWE_PLANETS.items()}
-        juno_raw = calc_planet(jd_tt, SWE_JUNO)
         asc_mc = calc_asc_mc(jd_tt, lat, lon)
 
-        all_planets_raw = {**planet_raw, "juno": juno_raw}
-
         planets = {}
-        for name, raw in all_planets_raw.items():
+        for name, raw in planet_raw.items():
             sym, name_str, deg, idx = lon_to_sign(raw["lon"])
             planets[name] = {
                 "sign": sym, "sign_name": name_str, "sign_index": idx,
@@ -322,13 +305,12 @@ def main():
                 "house": planet_in_house(raw["lon"], asc_mc["asc"], asc_mc["house_cusps"]),
             }
 
-        # 生成所有相位（仅主五行星，用于对照）
         five_lons = {n: planet_raw[n]["lon"] for n in planet_raw}
         all_aspects = build_aspects(five_lons, "exact")
 
         result = {
             "mode": "reference_test",
-            "description": "对照测试基准数据 — 出生信息：2002-08-16 11:30 北京时间，安徽省六安市霍邱县（32°N, 116°E）",
+            "description": "五行星对照测试 — 出生信息：2002-08-16 11:30 北京时间，安徽省六安市霍邱县（32°N, 116°E）",
             "birth": {
                 "date": "2002-08-16", "time": "11:30",
                 "location": "安徽省六安市霍邱县",
